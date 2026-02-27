@@ -46,9 +46,9 @@ export default function Landing() {
             transition={{ duration: 0.6 }}
             className="text-5xl md:text-7xl font-bold font-['Space_Grotesk'] leading-tight mb-6"
           >
-            نظّم أفكارك{' '}
+            نظّم لوحاتك{' '}
             <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              بأسلوب بصري
+              بأسلوب بصري جميل
             </span>
           </motion.h1>
           <motion.p
@@ -57,7 +57,7 @@ export default function Landing() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
           >
-            أنشئ لوحات تفاعلية، أضف محتوى متنوع، وشارك أفكارك مع العالم. The Salma Padlet هو مساحتك الإبداعية.
+         مع The Salma Padlet 
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
