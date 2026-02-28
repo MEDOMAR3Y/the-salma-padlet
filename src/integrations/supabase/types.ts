@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      board_shares: {
+        Row: {
+          board_id: string
+          created_at: string
+          email: string | null
+          id: string
+          permission: string
+          share_token: string | null
+          user_id: string | null
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          permission?: string
+          share_token?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          permission?: string
+          share_token?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_shares_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boards: {
         Row: {
           background_color: string | null

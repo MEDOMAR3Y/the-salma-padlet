@@ -1,13 +1,15 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePosts } from '@/hooks/usePosts';
+import { useBoardShares } from '@/hooks/useBoardShares';
 import { Board } from '@/hooks/useBoards';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreatePostDialog from '@/components/CreatePostDialog';
 import PostCard from '@/components/PostCard';
+import ShareBoardDialog from '@/components/ShareBoardDialog';
 import { ArrowRight, Layout, Grid3X3, Columns3, Network, Settings, Plus } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
@@ -15,8 +17,13 @@ const layoutIcons = { wall: Layout, grid: Grid3X3, column: Columns3, map: Networ
 
 export default function BoardView() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { shares } = useBoardShares(id!);
+
+  const userShare = shares.find(s => s.user_id === user?.id);
+  const hasWriteAccess = userShare?.permission === 'write' || userShare?.permission === 'admin';
 
   const boardQuery = useQuery({
     queryKey: ['board', id],
@@ -74,11 +81,10 @@ export default function BoardView() {
               <h1 className="text-lg font-bold font-['Space_Grotesk'] truncate max-w-[200px] sm:max-w-none">{board.title}</h1>
             </div>
           </div>
-          {isOwner && (
-            <div className="flex items-center gap-2">
-              <CreatePostDialog boardId={board.id} />
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {isOwner && <ShareBoardDialog boardId={board.id} currentVisibility={board.visibility} />}
+            {(isOwner || hasWriteAccess) && <CreatePostDialog boardId={board.id} />}
+          </div>
         </div>
       </header>
 
