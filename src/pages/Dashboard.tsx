@@ -3,6 +3,7 @@ import { useBoards } from '@/hooks/useBoards';
 import { Button } from '@/components/ui/button';
 import { LogOut, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/logo.png';
 import CreateBoardDialog from '@/components/CreateBoardDialog';
 import BoardCard from '@/components/BoardCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,9 +24,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background" dir="rtl">
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <h1 className="text-2xl font-bold font-['Space_Grotesk'] bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-            The Salma Padlet
-          </h1>
+          <img src={logo} alt="The Salma Padlet" className="h-10 object-contain" />
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <ThemeToggle />

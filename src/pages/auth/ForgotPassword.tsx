@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import logo from '@/assets/logo.png';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -30,8 +31,8 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4" dir="rtl">
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardHeader className="text-center">
-          <Link to="/" className="text-3xl font-bold font-['Space_Grotesk'] bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent mb-2 inline-block">
-            The Salma Padlet
+          <Link to="/" className="inline-block mb-2">
+            <img src={logo} alt="The Salma Padlet" className="h-12 mx-auto object-contain" />
           </Link>
           <CardTitle className="text-2xl font-['Space_Grotesk']">نسيت كلمة السر</CardTitle>
           <CardDescription>هنبعتلك رابط لإعادة تعيين كلمة السر</CardDescription>
