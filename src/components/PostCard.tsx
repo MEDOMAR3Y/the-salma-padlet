@@ -4,24 +4,23 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Heart, MessageCircle, MoreVertical, Trash2, ExternalLink, FileText, Send, X, User } from 'lucide-react';
+import { Heart, MessageCircle, MoreVertical, Trash2, FileText, Send, X, User, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVideoEmbed } from '@/lib/videoEmbed';
+import EditPostDialog from '@/components/EditPostDialog';
+import LinkPreview from '@/components/LinkPreview';
 
 function renderFormattedText(text: string) {
-  // Simple markdown: **bold**, *italic*, __underline__, - list items
   const lines = text.split('\n');
   return lines.map((line, i) => {
     let formatted = line
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       .replace(/__(.+?)__/g, '<u>$1</u>');
-    
     if (line.startsWith('- ')) {
       formatted = `• ${formatted.substring(2)}`;
     }
-    
     return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} className="block" />;
   });
 }
@@ -88,16 +87,10 @@ function PostComments({ postId }: { postId: string }) {
 function VideoEmbed({ url }: { url: string }) {
   const embed = getVideoEmbed(url);
   if (!embed) return null;
-  
   return (
     <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-      <iframe
-        src={embed.embedUrl}
-        className="absolute inset-0 w-full h-full"
-        allowFullScreen
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        loading="lazy"
-      />
+      <iframe src={embed.embedUrl} className="absolute inset-0 w-full h-full" allowFullScreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" loading="lazy" />
     </div>
   );
 }
@@ -112,6 +105,7 @@ export default function PostCard({ post, boardId }: PostCardProps) {
   const { user } = useAuth();
   const isOwner = post.user_id === user?.id;
   const videoEmbed = post.link_url ? getVideoEmbed(post.link_url) : null;
+  const [editOpen, setEditOpen] = useState(false);
 
   const resolvedBackground = post.color?.toLowerCase() === '#ffffff'
     ? 'hsl(var(--card))'
@@ -125,80 +119,70 @@ export default function PostCard({ post, boardId }: PostCardProps) {
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="rounded-xl border border-border shadow-sm overflow-hidden group"
-      style={{ backgroundColor: resolvedBackground }}
-    >
-      {/* Image */}
-      {post.post_type === 'image' && post.file_url && (
-        <img src={post.file_url} alt={post.content || ''} className="w-full max-h-64 object-cover" />
-      )}
+    <>
+      <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        className="rounded-xl border border-border shadow-sm overflow-hidden group"
+        style={{ backgroundColor: resolvedBackground }}
+      >
+        {post.post_type === 'image' && post.file_url && (
+          <img src={post.file_url} alt={post.content || ''} className="w-full max-h-64 object-cover" />
+        )}
+        {post.link_url && videoEmbed && <VideoEmbed url={post.link_url} />}
 
-      {/* Video Embed */}
-      {post.link_url && videoEmbed && (
-        <VideoEmbed url={post.link_url} />
-      )}
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+              {post.profile?.avatar_url ? (
+                <img src={post.profile.avatar_url} className="w-6 h-6 rounded-full object-cover" alt="" />
+              ) : (
+                <User className="h-3 w-3 text-primary" />
+              )}
+            </div>
+            <span className="text-xs font-medium text-muted-foreground">{post.profile?.display_name || 'مستخدم'}</span>
+          </div>
 
-      <div className="p-4">
-        {/* Author */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-            {post.profile?.avatar_url ? (
-              <img src={post.profile.avatar_url} className="w-6 h-6 rounded-full object-cover" alt="" />
-            ) : (
-              <User className="h-3 w-3 text-primary" />
+          {post.content && (
+            <div className="text-foreground text-sm mb-2">{renderFormattedText(post.content)}</div>
+          )}
+
+          {/* Link preview for non-video links */}
+          {post.post_type === 'link' && post.link_url && !videoEmbed && (
+            <LinkPreview url={post.link_url} />
+          )}
+
+          {post.post_type === 'file' && post.file_url && (
+            <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2">
+              <FileText className="h-4 w-4 shrink-0" /> {post.file_name || 'ملف مرفق'}
+            </a>
+          )}
+
+          <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+            <div className="flex items-center gap-3">
+              <PostLikes postId={post.id} />
+              <PostComments postId={post.id} />
+            </div>
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <Pencil className="h-4 w-4 ml-2" /> تعديل
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                    <Trash2 className="h-4 w-4 ml-2" /> حذف
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
-          <span className="text-xs font-medium text-muted-foreground">{post.profile?.display_name || 'مستخدم'}</span>
         </div>
+      </motion.div>
 
-        {/* Content with formatting */}
-        {post.content && (
-          <div className="text-foreground text-sm mb-2">
-            {renderFormattedText(post.content)}
-          </div>
-        )}
-
-        {/* Link (non-video) */}
-        {post.post_type === 'link' && post.link_url && !videoEmbed && (
-          <a href={post.link_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2 break-all">
-            <ExternalLink className="h-4 w-4 shrink-0" /> {post.link_url}
-          </a>
-        )}
-
-        {/* File */}
-        {post.post_type === 'file' && post.file_url && (
-          <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2">
-            <FileText className="h-4 w-4 shrink-0" /> {post.file_name || 'ملف مرفق'}
-          </a>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
-          <div className="flex items-center gap-3">
-            <PostLikes postId={post.id} />
-            <PostComments postId={post.id} />
-          </div>
-          {isOwner && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                  <Trash2 className="h-4 w-4 ml-2" /> حذف
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
-    </motion.div>
+      {isOwner && <EditPostDialog post={post} boardId={boardId} open={editOpen} onOpenChange={setEditOpen} />}
+    </>
   );
 }

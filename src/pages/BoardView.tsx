@@ -84,6 +84,20 @@ export default function BoardView() {
   const hasWriteAccess = !isBlocked && (isOwner || userShare?.permission === 'write' || userShare?.permission === 'admin' || board.visibility === 'public');
   const hasAdminAccess = isOwner || userShare?.permission === 'admin';
 
+  // Blocked users see access denied page
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4" dir="rtl">
+        <div className="w-20 h-20 rounded-2xl bg-destructive/10 flex items-center justify-center mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+        </div>
+        <h2 className="text-2xl font-bold text-foreground font-['Space_Grotesk']">ليس لديك صلاحية الوصول</h2>
+        <p className="text-muted-foreground">تم حظرك من الوصول إلى هذه اللوحة</p>
+        <Button asChild><Link to="/">العودة للرئيسية</Link></Button>
+      </div>
+    );
+  }
+
   const getLayoutClasses = () => {
     switch (board.layout) {
       case 'grid': return 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
