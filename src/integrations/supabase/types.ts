@@ -256,6 +256,10 @@ export type Database = {
         Args: { _board_id: string; _user_id: string }
         Returns: boolean
       }
+      is_user_blocked: {
+        Args: { _board_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_has_board_access: {
         Args: { _board_id: string; _user_id: string }
         Returns: boolean
