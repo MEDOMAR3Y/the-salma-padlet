@@ -194,24 +194,6 @@ export default function RichTextEditor({ content, onChange, placeholder = 'اك�
         </ToolBtn>
       </div>
 
-      {/* Bubble Menu - appears on text selection */}
-      {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 150 }} className="flex items-center gap-0.5 bg-popover border border-border rounded-lg shadow-lg px-1 py-0.5">
-          <ToolBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="عريض">
-            <Bold className="h-3.5 w-3.5" />
-          </ToolBtn>
-          <ToolBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="مائل">
-            <Italic className="h-3.5 w-3.5" />
-          </ToolBtn>
-          <ToolBtn active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="تحته خط">
-            <UnderlineIcon className="h-3.5 w-3.5" />
-          </ToolBtn>
-          <div className="w-px h-4 bg-border mx-0.5" />
-          <ToolBtn active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="عنوان">
-            <Heading2 className="h-3.5 w-3.5" />
-          </ToolBtn>
-        </BubbleMenu>
-      )}
 
       {/* Editor */}
       <div style={{ minHeight }} className="cursor-text" onClick={() => editor.chain().focus().run()}>
