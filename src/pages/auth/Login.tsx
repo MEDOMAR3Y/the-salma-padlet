@@ -29,11 +29,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8" dir="rtl">
-      <div className="absolute inset-0 opacity-20">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4 py-6" dir="rtl">
+      <div className="absolute inset-0 opacity-20 overflow-hidden">
         <div className="absolute top-1/4 right-1/3 w-72 h-72 rounded-full bg-primary/20 blur-[100px]" />
       </div>
-      <Card className="w-full max-w-md relative z-10 border-border shadow-lg">
+      <Card className="w-full max-w-md relative z-10 border-border shadow-lg mx-auto">
         <CardHeader className="text-center">
           <Link to="/" className="inline-block mb-2">
             <img src={logo} alt="The Salma Padlet" className="h-12 mx-auto object-contain" />

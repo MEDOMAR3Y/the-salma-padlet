@@ -1,66 +1,20 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Loader2, Image, FileUp, Bold, Italic, Underline, List, X, Video } from 'lucide-react';
+import { Plus, Loader2, Image, FileUp, X, Video } from 'lucide-react';
 import { usePosts, uploadPostFile } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import { isVideoUrl } from '@/lib/videoEmbed';
 import { toast } from 'sonner';
+import RichTextEditor from '@/components/RichTextEditor';
 
 const POST_COLORS = ['#ffffff', '#fef3c7', '#dbeafe', '#dcfce7', '#fce7f3', '#f3e8ff', '#fed7d7', '#e0e7ff'];
 
 interface CreatePostDialogProps {
   boardId: string;
   trigger?: React.ReactNode;
-}
-
-function useTextFormat(contentRef: React.RefObject<HTMLTextAreaElement>, content: string, setContent: (v: string) => void) {
-  const insertFormat = useCallback((prefix: string, suffix: string) => {
-    const ta = contentRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    const selected = content.substring(start, end);
-    
-    // Check if already formatted - toggle off
-    const before = content.substring(Math.max(0, start - prefix.length), start);
-    const after = content.substring(end, end + suffix.length);
-    if (before === prefix && after === suffix) {
-      const newContent = content.substring(0, start - prefix.length) + selected + content.substring(end + suffix.length);
-      setContent(newContent);
-      setTimeout(() => {
-        ta.focus();
-        ta.setSelectionRange(start - prefix.length, end - prefix.length);
-      }, 0);
-      return;
-    }
-    
-    const newContent = content.substring(0, start) + prefix + selected + suffix + content.substring(end);
-    setContent(newContent);
-    setTimeout(() => {
-      ta.focus();
-      ta.setSelectionRange(start + prefix.length, end + prefix.length);
-    }, 0);
-  }, [content, setContent, contentRef]);
-
-  return insertFormat;
-}
-
-function renderPreview(text: string) {
-  if (!text.trim()) return null;
-  const lines = text.split('\n');
-  return lines.map((line, i) => {
-    let formatted = line
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/__(.+?)__/g, '<u>$1</u>');
-    if (line.startsWith('- ')) {
-      formatted = `<span class="inline-flex gap-1">•&nbsp;${formatted.substring(2)}</span>`;
-    }
-    return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} className="block leading-relaxed" />;
-  });
 }
 
 export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogProps) {
@@ -72,12 +26,8 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
   const [fileType, setFileType] = useState<'image' | 'file' | null>(null);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const { createPost } = usePosts(boardId);
   const { user } = useAuth();
-  const textRef = useRef<HTMLTextAreaElement>(null!);
-
-  const insertFormat = useTextFormat(textRef, content, setContent);
 
   const reset = () => {
     setContent('');
@@ -86,7 +36,6 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
     setFile(null);
     setFileType(null);
     setShowLinkInput(false);
-    setShowPreview(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +46,9 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
       ? (/^https?:\/\//i.test(trimmedLink) ? trimmedLink : `https://${trimmedLink}`)
       : '';
 
-    if (!content.trim() && !file && !normalizedLink) {
+    // Strip HTML tags to check if there's actual content
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+    if (!textContent && !file && !normalizedLink) {
       toast.error('أضف محتوى للمنشور');
       return;
     }
@@ -120,7 +71,7 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
 
       await createPost.mutateAsync({
         board_id: boardId,
-        content: content.trim() || null,
+        content: textContent ? content : null,
         post_type: postType as any,
         color,
         link_url: normalizedLink || null,
@@ -138,8 +89,6 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
     }
   };
 
-  const hasFormatting = /\*\*|__|^\- /m.test(content);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -154,59 +103,11 @@ export default function CreatePostDialog({ boardId, trigger }: CreatePostDialogP
           <DialogTitle className="font-['Space_Grotesk'] text-xl">إضافة منشور جديد</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          {/* Formatting toolbar */}
-          <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-muted/30">
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('**', '**')} title="عريض">
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('*', '*')} title="مائل">
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('__', '__')} title="تحته خط">
-              <Underline className="h-4 w-4" />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('\n- ', '')} title="قائمة">
-              <List className="h-4 w-4" />
-            </Button>
-            <div className="flex-1" />
-            {hasFormatting && (
-              <Button 
-                type="button" 
-                variant={showPreview ? "secondary" : "ghost"} 
-                size="sm" 
-                className="h-7 text-xs px-2"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                {showPreview ? 'تحرير' : 'معاينة'}
-              </Button>
-            )}
-          </div>
-
-          {/* Text area or preview */}
-          {showPreview ? (
-            <div 
-              className="min-h-[100px] p-3 rounded-md border border-border bg-card text-sm"
-              style={{ backgroundColor: color === '#ffffff' ? 'hsl(var(--card))' : color }}
-            >
-              {renderPreview(content)}
-            </div>
-          ) : (
-            <textarea
-              ref={textRef}
-              placeholder="اكتب محتوى المنشور... حدد نص واضغط B للعريض"
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              rows={4}
-              className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              onKeyDown={e => {
-                if (e.ctrlKey || e.metaKey) {
-                  if (e.key === 'b') { e.preventDefault(); insertFormat('**', '**'); }
-                  if (e.key === 'i') { e.preventDefault(); insertFormat('*', '*'); }
-                  if (e.key === 'u') { e.preventDefault(); insertFormat('__', '__'); }
-                }
-              }}
-            />
-          )}
+          <RichTextEditor
+            content={content}
+            onChange={setContent}
+            placeholder="اكتب محتوى المنشور... حدد نص واضغط على الأزرار للتنسيق"
+          />
 
           {/* Attachments */}
           <div className="space-y-3">
