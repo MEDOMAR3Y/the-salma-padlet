@@ -11,20 +11,6 @@ import { getVideoEmbed } from '@/lib/videoEmbed';
 import EditPostDialog from '@/components/EditPostDialog';
 import LinkPreview from '@/components/LinkPreview';
 
-function renderFormattedText(text: string) {
-  const lines = text.split('\n');
-  return lines.map((line, i) => {
-    let formatted = line
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/__(.+?)__/g, '<u>$1</u>');
-    if (line.startsWith('- ')) {
-      formatted = `• ${formatted.substring(2)}`;
-    }
-    return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} className="block" />;
-  });
-}
-
 function PostLikes({ postId }: { postId: string }) {
   const { isLiked, count, toggleLike } = useLikes(postId);
   return (
@@ -142,10 +128,12 @@ export default function PostCard({ post, boardId }: PostCardProps) {
           </div>
 
           {post.content && (
-            <div className="text-foreground text-sm mb-2">{renderFormattedText(post.content)}</div>
+            <div
+              className="text-foreground text-sm mb-2 prose prose-sm max-w-none [&>ul]:list-disc [&>ul]:pr-4 [&>ol]:list-decimal [&>ol]:pr-4"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
           )}
 
-          {/* Link preview for non-video links */}
           {post.post_type === 'link' && post.link_url && !videoEmbed && (
             <LinkPreview url={post.link_url} />
           )}
