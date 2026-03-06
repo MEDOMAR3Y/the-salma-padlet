@@ -19,6 +19,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function useBoardShares(boardId: string) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const sharesQuery = useQuery({
     queryKey: ['board-shares', boardId],
