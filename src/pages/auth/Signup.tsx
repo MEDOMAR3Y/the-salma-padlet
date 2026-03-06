@@ -33,7 +33,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8" dir="rtl">
       <div className="absolute inset-0 opacity-20">
         <div className="absolute bottom-1/4 left-1/3 w-72 h-72 rounded-full bg-accent/20 blur-[100px]" />
       </div>

@@ -160,7 +160,7 @@ export default function Profile() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <Card>
             <CardHeader><CardTitle>البروفايل</CardTitle></CardHeader>

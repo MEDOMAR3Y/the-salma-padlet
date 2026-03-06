@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Bold, Italic, Underline, List } from 'lucide-react';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { toast } from 'sonner';
@@ -23,21 +22,28 @@ export default function EditPostDialog({ post, boardId, open, onOpenChange }: Ed
   const [color, setColor] = useState(post.color || POST_COLORS[0]);
   const [loading, setLoading] = useState(false);
   const { updatePost } = usePosts(boardId);
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null!);
 
-  const insertFormat = (prefix: string, suffix: string) => {
+  const insertFormat = useCallback((prefix: string, suffix: string) => {
     const ta = textRef.current;
     if (!ta) return;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
     const selected = content.substring(start, end);
+
+    const before = content.substring(Math.max(0, start - prefix.length), start);
+    const after = content.substring(end, end + suffix.length);
+    if (before === prefix && after === suffix) {
+      const newContent = content.substring(0, start - prefix.length) + selected + content.substring(end + suffix.length);
+      setContent(newContent);
+      setTimeout(() => { ta.focus(); ta.setSelectionRange(start - prefix.length, end - prefix.length); }, 0);
+      return;
+    }
+
     const newContent = content.substring(0, start) + prefix + selected + suffix + content.substring(end);
     setContent(newContent);
-    setTimeout(() => {
-      ta.focus();
-      ta.setSelectionRange(start + prefix.length, end + prefix.length);
-    }, 0);
-  };
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + prefix.length, end + prefix.length); }, 0);
+  }, [content]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +66,7 @@ export default function EditPostDialog({ post, boardId, open, onOpenChange }: Ed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" dir="rtl">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
           <DialogTitle className="font-['Space_Grotesk'] text-xl">تعديل المنشور</DialogTitle>
         </DialogHeader>
@@ -71,21 +77,35 @@ export default function EditPostDialog({ post, boardId, open, onOpenChange }: Ed
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('__', '__')}><Underline className="h-4 w-4" /></Button>
             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertFormat('\n- ', '')}><List className="h-4 w-4" /></Button>
           </div>
-          <Textarea ref={textRef} value={content} onChange={e => setContent(e.target.value)} rows={4} className="resize-none" placeholder="محتوى المنشور..." />
+          <textarea
+            ref={textRef}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            rows={4}
+            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+            placeholder="محتوى المنشور..."
+            onKeyDown={e => {
+              if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'b') { e.preventDefault(); insertFormat('**', '**'); }
+                if (e.key === 'i') { e.preventDefault(); insertFormat('*', '*'); }
+                if (e.key === 'u') { e.preventDefault(); insertFormat('__', '__'); }
+              }
+            }}
+          />
           {(post.post_type === 'link') && (
             <Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="رابط..." dir="ltr" />
           )}
           <div className="space-y-2">
-            <Label>لون المنشور</Label>
+            <Label className="text-sm">لون المنشور</Label>
             <div className="flex gap-2 flex-wrap">
               {POST_COLORS.map(c => (
                 <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`w-7 h-7 rounded-full border-2 transition-all ${color === c ? 'border-foreground scale-110' : 'border-border'}`}
+                  className={`w-7 h-7 rounded-full border-2 transition-all ${color === c ? 'border-foreground scale-110 ring-2 ring-primary/30' : 'border-border hover:scale-105'}`}
                   style={{ backgroundColor: c }} />
               ))}
             </div>
           </div>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 h-11" disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'حفظ التعديلات'}
           </Button>
         </form>
