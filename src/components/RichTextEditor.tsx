@@ -12,9 +12,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
   Heading1, Heading2, Heading3, Highlighter, Palette,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import {
-  Popover,
+import { useEffect } from 'react';
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
