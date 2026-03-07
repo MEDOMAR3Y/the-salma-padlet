@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { Post, usePosts } from '@/hooks/usePosts';
 import { toast } from 'sonner';
 import RichTextEditor from '@/components/RichTextEditor';
+import ColorPicker from '@/components/ColorPicker';
 
 const POST_COLORS = ['#ffffff', '#fef3c7', '#dbeafe', '#dcfce7', '#fce7f3', '#f3e8ff', '#fed7d7', '#e0e7ff'];
 
