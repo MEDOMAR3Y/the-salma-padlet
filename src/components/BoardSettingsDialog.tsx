@@ -32,7 +32,12 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
   const [layout, setLayout] = useState(board.layout);
   const [visibility, setVisibility] = useState(board.visibility);
   const [color, setColor] = useState(board.background_color || COLORS[0]);
+  const [bgImage, setBgImage] = useState<File | null>(null);
+  const [bgPreview, setBgPreview] = useState<string | null>(board.background_image);
+  const [removeBg, setRemoveBg] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { updateBoard } = useBoards();
+  const { user } = useAuth();
 
   // Sync state when board changes
   useEffect(() => {
@@ -41,6 +46,9 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
     setLayout(board.layout);
     setVisibility(board.visibility);
     setColor(board.background_color || COLORS[0]);
+    setBgPreview(board.background_image);
+    setBgImage(null);
+    setRemoveBg(false);
   }, [board]);
 
   // Sharing
@@ -55,8 +63,21 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
       toast.error('اكتب عنوان اللوحة');
       return;
     }
-
+    setSaving(true);
     try {
+      let background_image: string | null | undefined = undefined;
+      
+      if (removeBg) {
+        background_image = null;
+      } else if (bgImage && user) {
+        const ext = bgImage.name.split('.').pop();
+        const path = `${user.id}/board-bg-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('post-files').upload(path, bgImage);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('post-files').getPublicUrl(path);
+        background_image = data.publicUrl;
+      }
+
       await updateBoard.mutateAsync({
         id: board.id,
         title: title.trim(),
@@ -64,11 +85,14 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
         layout,
         visibility,
         background_color: color,
+        ...(background_image !== undefined ? { background_image } : {}),
       } as Partial<Board> & { id: string });
       toast.success('تم حفظ إعدادات اللوحة');
       setOpen(false);
     } catch {
       toast.error('فشل حفظ الإعدادات');
+    } finally {
+      setSaving(false);
     }
   };
 
