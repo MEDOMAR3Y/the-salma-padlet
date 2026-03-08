@@ -189,10 +189,33 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>صورة الخلفية</Label>
+            {bgPreview && !removeBg ? (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img src={bgPreview} alt="" className="w-full h-24 object-cover" />
+                <Button type="button" variant="destructive" size="icon" className="absolute top-1 left-1 h-6 w-6" onClick={() => { setRemoveBg(true); setBgImage(null); setBgPreview(null); }}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="cursor-pointer">
+                <div className="flex items-center justify-center gap-2 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors text-muted-foreground hover:text-primary">
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-sm">اختر صورة خلفية</span>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) { setBgImage(file); setBgPreview(URL.createObjectURL(file)); setRemoveBg(false); }
+                }} />
+              </label>
+            )}
+          </div>
+
           <ColorPicker color={color} onChange={setColor} label="لون الخلفية" />
 
-          <Button type="submit" className="w-full" disabled={updateBoard.isPending}>
-            {updateBoard.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'حفظ التعديلات'}
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'حفظ التعديلات'}
           </Button>
         </form>
 
