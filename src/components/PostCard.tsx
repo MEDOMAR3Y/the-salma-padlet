@@ -218,24 +218,6 @@ export default function PostCard({ post, boardId }: PostCardProps) {
                       <Pencil className="h-4 w-4 ml-2" /> تعديل المنشور
                     </DropdownMenuItem>
 
-                    {/* Quick color change submenu */}
-                    <DropdownMenuItem className="p-0" onSelect={e => e.preventDefault()}>
-                      <div className="flex items-center gap-2 px-2 py-1.5 w-full">
-                        <Palette className="h-4 w-4 ml-1 shrink-0" />
-                        <span className="text-sm ml-1">اللون</span>
-                        <div className="flex gap-1 mr-auto">
-                          {POST_COLORS.slice(0, 6).map(c => (
-                            <button
-                              key={c}
-                              onClick={() => handleChangeColor(c)}
-                              className={`w-4 h-4 rounded-full border transition-all hover:scale-125 ${post.color === c ? 'border-foreground ring-1 ring-primary/50' : 'border-border/50'}`}
-                              style={{ backgroundColor: c === '#ffffff' ? 'hsl(var(--card))' : c }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </DropdownMenuItem>
-
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive">
                       <Trash2 className="h-4 w-4 ml-2" /> حذف المنشور

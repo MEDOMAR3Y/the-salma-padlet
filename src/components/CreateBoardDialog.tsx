@@ -5,30 +5,55 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, ImagePlus, X } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-const COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#06b6d4'];
+import ColorPicker from '@/components/ColorPicker';
 
 export default function CreateBoardDialog() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [color, setColor] = useState(COLORS[0]);
+  const [color, setColor] = useState('#6366f1');
   const [layout, setLayout] = useState('wall');
+  const [bgImage, setBgImage] = useState<File | null>(null);
+  const [bgPreview, setBgPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const { createBoard } = useBoards();
+  const { user } = useAuth();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBgImage(file);
+      setBgPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) { toast.error('اكتب عنوان اللوحة'); return; }
+    setLoading(true);
     try {
-      await createBoard.mutateAsync({ title: title.trim(), description: description.trim() || undefined, background_color: color, layout });
+      let background_image: string | undefined;
+      if (bgImage && user) {
+        const ext = bgImage.name.split('.').pop();
+        const path = `${user.id}/board-bg-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('post-files').upload(path, bgImage);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('post-files').getPublicUrl(path);
+        background_image = data.publicUrl;
+      }
+      await createBoard.mutateAsync({ title: title.trim(), description: description.trim() || undefined, background_color: color, layout, ...(background_image ? { background_image } : {}) });
       toast.success('تم إنشاء اللوحة!');
       setOpen(false);
-      setTitle(''); setDescription(''); setColor(COLORS[0]); setLayout('wall');
+      setTitle(''); setDescription(''); setColor('#6366f1'); setLayout('wall'); setBgImage(null); setBgPreview(null);
     } catch {
       toast.error('حصل خطأ، حاول مرة ثانية');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,21 +90,27 @@ export default function CreateBoardDialog() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>لون الخلفية</Label>
-            <div className="flex gap-2 flex-wrap">
-              {COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${color === c ? 'border-foreground scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
+            <Label>خلفية اللوحة (صورة - اختياري)</Label>
+            {bgPreview ? (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img src={bgPreview} alt="" className="w-full h-24 object-cover" />
+                <Button type="button" variant="destructive" size="icon" className="absolute top-1 left-1 h-6 w-6" onClick={() => { setBgImage(null); setBgPreview(null); }}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="cursor-pointer">
+                <div className="flex items-center justify-center gap-2 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors text-muted-foreground hover:text-primary">
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-sm">اختر صورة خلفية</span>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
+            )}
           </div>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={createBoard.isPending}>
-            {createBoard.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'أنشئ اللوحة'}
+          <ColorPicker color={color} onChange={setColor} label="لون الخلفية" />
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading || createBoard.isPending}>
+            {(loading || createBoard.isPending) ? <Loader2 className="h-4 w-4 animate-spin" /> : 'أنشئ اللوحة'}
           </Button>
         </form>
       </DialogContent>
