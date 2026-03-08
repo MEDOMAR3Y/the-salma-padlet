@@ -29,7 +29,7 @@ const stats = [
 ];
 
 export default function Landing() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
@@ -49,7 +49,6 @@ export default function Landing() {
             {user ? (
               <button onClick={() => navigate('/profile')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     <User className="h-4 w-4" />
                   </AvatarFallback>
