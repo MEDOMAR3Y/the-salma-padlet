@@ -108,7 +108,17 @@ export default function BoardView() {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
+    <div
+      className="min-h-screen overflow-x-hidden"
+      dir="rtl"
+      style={{
+        backgroundColor: board.background_color || undefined,
+        backgroundImage: board.background_image ? `url(${board.background_image})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <Link to="/"><img src={logo} alt="Logo" className="h-14 object-contain" /></Link>

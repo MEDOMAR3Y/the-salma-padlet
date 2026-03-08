@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Loader2, Copy, Check, UserPlus, Trash2, ShieldBan, Globe, Lock } from 'lucide-react';
+import { Settings, Loader2, Copy, Check, UserPlus, Trash2, ShieldBan, Globe, Lock, ImagePlus, X } from 'lucide-react';
 import { useBoards, type Board } from '@/hooks/useBoards';
 import { useBoardShares, type BoardShare } from '@/hooks/useBoardShares';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface BoardSettingsDialogProps {
