@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Layout, Users, Share2, Palette, Zap, Shield, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Layout, Users, Share2, Palette, Zap, Shield, Sparkles, Star, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useRef } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import logo from '@/assets/logo.png';
 
 const features = [
@@ -27,6 +29,8 @@ const stats = [
 ];
 
 export default function Landing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
@@ -42,8 +46,20 @@ export default function Landing() {
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="ghost" asChild className="hidden sm:inline-flex"><Link to="/auth/login">تسجيل دخول</Link></Button>
-            <Button asChild><Link to="/auth/signup">ابدأ مجاناً</Link></Button>
+            {user ? (
+              <button onClick={() => navigate('/profile')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild className="hidden sm:inline-flex"><Link to="/auth/login">تسجيل دخول</Link></Button>
+                <Button asChild><Link to="/auth/signup">ابدأ مجاناً</Link></Button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -119,15 +135,26 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button size="lg" asChild className="text-lg px-10 h-14 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
-              <Link to="/auth/signup">
-                ابدأ مجاناً
-                <ArrowRight className="mr-2 h-5 w-5 rotate-180" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-10 h-14 rounded-2xl">
-              <Link to="/auth/login">تسجيل دخول</Link>
-            </Button>
+            {user ? (
+              <Button size="lg" asChild className="text-lg px-10 h-14 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
+                <Link to="/profile">
+                  لوحاتي
+                  <ArrowRight className="mr-2 h-5 w-5 rotate-180" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild className="text-lg px-10 h-14 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
+                  <Link to="/auth/signup">
+                    ابدأ مجاناً
+                    <ArrowRight className="mr-2 h-5 w-5 rotate-180" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="text-lg px-10 h-14 rounded-2xl">
+                  <Link to="/auth/login">تسجيل دخول</Link>
+                </Button>
+              </>
+            )}
           </motion.div>
 
           {/* Stats */}
@@ -282,7 +309,7 @@ export default function Landing() {
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 font-['Space_Grotesk']">جاهز تبدأ؟</h2>
               <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">أنشئ حسابك مجاناً وابدأ في بناء لوحاتك الإبداعية</p>
               <Button size="lg" asChild className="text-lg px-12 h-14 rounded-2xl shadow-lg shadow-primary/25">
-                <Link to="/auth/signup">أنشئ حسابك الآن</Link>
+                <Link to={user ? '/profile' : '/auth/signup'}>{user ? 'لوحاتي' : 'أنشئ حسابك الآن'}</Link>
               </Button>
             </div>
           </motion.div>

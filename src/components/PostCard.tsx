@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Heart, MessageCircle, MoreVertical, Trash2, FileText, Send, X, User, Pencil, Copy, ExternalLink, Palette, ArrowUp, ArrowDown } from 'lucide-react';
+import { Heart, MessageCircle, MoreVertical, Trash2, FileText, Send, X, User, Pencil, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getVideoEmbed } from '@/lib/videoEmbed';
@@ -97,7 +97,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, boardId }: PostCardProps) {
-  const { deletePost, updatePost } = usePosts(boardId);
+  const { deletePost } = usePosts(boardId);
   const { user } = useAuth();
   const isOwner = post.user_id === user?.id;
   const videoEmbed = post.link_url ? getVideoEmbed(post.link_url) : null;
@@ -128,14 +128,6 @@ export default function PostCard({ post, boardId }: PostCardProps) {
     }
   };
 
-  const handleChangeColor = async (newColor: string) => {
-    try {
-      await updatePost.mutateAsync({ id: post.id, color: newColor });
-      toast.success('تم تغيير اللون');
-    } catch { toast.error('حصل خطأ'); }
-  };
-
-  const POST_COLORS = ['#ffffff', '#fef3c7', '#dbeafe', '#dcfce7', '#fce7f3', '#f3e8ff', '#fed7d7', '#e0e7ff'];
 
   return (
     <>
@@ -216,24 +208,6 @@ export default function PostCard({ post, boardId }: PostCardProps) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setEditOpen(true)}>
                       <Pencil className="h-4 w-4 ml-2" /> تعديل المنشور
-                    </DropdownMenuItem>
-
-                    {/* Quick color change submenu */}
-                    <DropdownMenuItem className="p-0" onSelect={e => e.preventDefault()}>
-                      <div className="flex items-center gap-2 px-2 py-1.5 w-full">
-                        <Palette className="h-4 w-4 ml-1 shrink-0" />
-                        <span className="text-sm ml-1">اللون</span>
-                        <div className="flex gap-1 mr-auto">
-                          {POST_COLORS.slice(0, 6).map(c => (
-                            <button
-                              key={c}
-                              onClick={() => handleChangeColor(c)}
-                              className={`w-4 h-4 rounded-full border transition-all hover:scale-125 ${post.color === c ? 'border-foreground ring-1 ring-primary/50' : 'border-border/50'}`}
-                              style={{ backgroundColor: c === '#ffffff' ? 'hsl(var(--card))' : c }}
-                            />
-                          ))}
-                        </div>
-                      </div>
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
