@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Loader2, Copy, Check, UserPlus, Trash2, ShieldBan, Globe, Lock } from 'lucide-react';
+import { Settings, Loader2, Copy, Check, UserPlus, Trash2, ShieldBan, Globe, Lock, ImagePlus, X } from 'lucide-react';
 import { useBoards, type Board } from '@/hooks/useBoards';
 import { useBoardShares, type BoardShare } from '@/hooks/useBoardShares';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface BoardSettingsDialogProps {
@@ -30,7 +32,12 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
   const [layout, setLayout] = useState(board.layout);
   const [visibility, setVisibility] = useState(board.visibility);
   const [color, setColor] = useState(board.background_color || COLORS[0]);
+  const [bgImage, setBgImage] = useState<File | null>(null);
+  const [bgPreview, setBgPreview] = useState<string | null>(board.background_image);
+  const [removeBg, setRemoveBg] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { updateBoard } = useBoards();
+  const { user } = useAuth();
 
   // Sync state when board changes
   useEffect(() => {
@@ -39,6 +46,9 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
     setLayout(board.layout);
     setVisibility(board.visibility);
     setColor(board.background_color || COLORS[0]);
+    setBgPreview(board.background_image);
+    setBgImage(null);
+    setRemoveBg(false);
   }, [board]);
 
   // Sharing
@@ -53,8 +63,21 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
       toast.error('اكتب عنوان اللوحة');
       return;
     }
-
+    setSaving(true);
     try {
+      let background_image: string | null | undefined = undefined;
+      
+      if (removeBg) {
+        background_image = null;
+      } else if (bgImage && user) {
+        const ext = bgImage.name.split('.').pop();
+        const path = `${user.id}/board-bg-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('post-files').upload(path, bgImage);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('post-files').getPublicUrl(path);
+        background_image = data.publicUrl;
+      }
+
       await updateBoard.mutateAsync({
         id: board.id,
         title: title.trim(),
@@ -62,11 +85,14 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
         layout,
         visibility,
         background_color: color,
+        ...(background_image !== undefined ? { background_image } : {}),
       } as Partial<Board> & { id: string });
       toast.success('تم حفظ إعدادات اللوحة');
       setOpen(false);
     } catch {
       toast.error('فشل حفظ الإعدادات');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -163,10 +189,33 @@ export default function BoardSettingsDialog({ board, externalOpen, onExternalOpe
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>صورة الخلفية</Label>
+            {bgPreview && !removeBg ? (
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img src={bgPreview} alt="" className="w-full h-24 object-cover" />
+                <Button type="button" variant="destructive" size="icon" className="absolute top-1 left-1 h-6 w-6" onClick={() => { setRemoveBg(true); setBgImage(null); setBgPreview(null); }}>
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="cursor-pointer">
+                <div className="flex items-center justify-center gap-2 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors text-muted-foreground hover:text-primary">
+                  <ImagePlus className="h-5 w-5" />
+                  <span className="text-sm">اختر صورة خلفية</span>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) { setBgImage(file); setBgPreview(URL.createObjectURL(file)); setRemoveBg(false); }
+                }} />
+              </label>
+            )}
+          </div>
+
           <ColorPicker color={color} onChange={setColor} label="لون الخلفية" />
 
-          <Button type="submit" className="w-full" disabled={updateBoard.isPending}>
-            {updateBoard.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'حفظ التعديلات'}
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'حفظ التعديلات'}
           </Button>
         </form>
 

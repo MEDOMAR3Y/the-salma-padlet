@@ -66,7 +66,13 @@ export default function BoardCard({ board }: { board: Board }) {
         onClick={() => navigate(`/board/${board.id}`)}
         className="group relative rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
       >
-        <div className="h-24 relative" style={{ backgroundColor: board.background_color }}>
+        <div
+          className="h-24 relative bg-cover bg-center"
+          style={{
+            backgroundColor: board.background_color,
+            backgroundImage: board.background_image ? `url(${board.background_image})` : undefined,
+          }}
+        >
           <div className="absolute inset-0 bg-black/10" />
           <div className="absolute bottom-2 right-3 flex items-center gap-1 bg-black/30 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
             <Icon className="h-3 w-3" />
