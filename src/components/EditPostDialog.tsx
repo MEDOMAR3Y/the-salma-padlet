@@ -41,7 +41,7 @@ export default function EditPostDialog({ post, boardId, open, onOpenChange }: Ed
       
       let file_url: string | null | undefined = undefined;
       let file_name: string | null | undefined = undefined;
-      let post_type: string | undefined = undefined;
+      let post_type: Post['post_type'] | undefined = undefined;
 
       // Handle file changes
       if (newFile && user) {
