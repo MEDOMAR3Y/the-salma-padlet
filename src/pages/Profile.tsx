@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Loader2, Save, Layout, UserCircle, LogOut } from 'lucide-react';
+import { Camera, Loader2, Save, Layout, UserCircle, LogOut, AtSign, Check, AlertCircle } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -23,10 +23,14 @@ export default function Profile() {
   const navigate = useNavigate();
 
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
+
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const [originalUsername, setOriginalUsername] = useState('');
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,7 +38,6 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) return;
-
     supabase
       .from('profiles')
       .select('*')
@@ -45,15 +48,49 @@ export default function Profile() {
           setDisplayName(data.display_name || '');
           setBio(data.bio || '');
           setAvatarUrl(data.avatar_url || '');
+          setUsername((data as any).username || '');
+          setOriginalUsername((data as any).username || '');
         }
       });
   }, [user]);
 
+  // Check username availability
+  useEffect(() => {
+    if (!username || username === originalUsername) {
+      setUsernameStatus('idle');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setUsernameStatus('invalid');
+      return;
+    }
+    setUsernameStatus('checking');
+    const timeout = setTimeout(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('username' as any, username)
+        .neq('user_id', user?.id || '')
+        .maybeSingle();
+      setUsernameStatus(data ? 'taken' : 'available');
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [username, originalUsername, user]);
+
   const handleSaveProfile = async () => {
     if (!user) return;
+    if (usernameStatus === 'taken') { toast.error('اسم المستخدم محجوز'); return; }
+    if (usernameStatus === 'invalid') { toast.error('اسم المستخدم لازم يكون 3-20 حرف (أحرف إنجليزية، أرقام، _)'); return; }
+
     setLoading(true);
     try {
-      // Try update first
+      const profileData: any = {
+        display_name: displayName.trim() || null,
+        bio: bio.trim() || null,
+        avatar_url: avatarUrl || null,
+        username: username.trim() || null,
+      };
+
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
@@ -61,25 +98,20 @@ export default function Profile() {
         .maybeSingle();
 
       if (existing) {
-        const { error } = await supabase.from('profiles').update({
-          display_name: displayName.trim() || null,
-          bio: bio.trim() || null,
-          avatar_url: avatarUrl || null,
-        }).eq('user_id', user.id);
+        const { error } = await supabase.from('profiles').update(profileData).eq('user_id', user.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('profiles').insert({
-          user_id: user.id,
-          display_name: displayName.trim() || null,
-          bio: bio.trim() || null,
-          avatar_url: avatarUrl || null,
-        });
+        const { error } = await supabase.from('profiles').insert({ ...profileData, user_id: user.id });
         if (error) throw error;
       }
+      setOriginalUsername(username.trim());
       toast.success('تم حفظ البروفايل!');
     } catch (err: any) {
-      console.error('Profile save error:', err);
-      toast.error('حصل خطأ أثناء الحفظ');
+      if (err?.message?.includes('profiles_username_unique')) {
+        toast.error('اسم المستخدم محجوز');
+      } else {
+        toast.error('حصل خطأ أثناء الحفظ');
+      }
     } finally {
       setLoading(false);
     }
@@ -94,11 +126,8 @@ export default function Profile() {
       const path = `${user.id}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file);
       if (uploadError) throw uploadError;
-
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       setAvatarUrl(data.publicUrl);
-
-      // Save immediately
       const { data: existing } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
       if (existing) {
         await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('user_id', user.id);
@@ -116,7 +145,6 @@ export default function Profile() {
   const handleChangePassword = async () => {
     if (newPassword.length < 6) { toast.error('كلمة المرور لازم تكون 6 أحرف على الأقل'); return; }
     if (newPassword !== confirmPassword) { toast.error('كلمات المرور مش متطابقة'); return; }
-
     setPasswordLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
@@ -143,7 +171,6 @@ export default function Profile() {
           <Link to="/"><img src={logo} alt="Logo" className="h-14 object-contain" /></Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            
             <Button variant="ghost" size="icon" className="md:hidden" title="البروفايل">
               <UserCircle className="h-5 w-5" />
             </Button>
@@ -178,7 +205,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="font-semibold text-lg">{displayName || 'بدون اسم'}</p>
-                  
+                  {username && <p className="text-sm text-muted-foreground">@{username}</p>}
                 </div>
               </div>
 
@@ -188,10 +215,34 @@ export default function Profile() {
                   <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="اسمك" />
                 </div>
                 <div className="space-y-1">
+                  <Label className="flex items-center gap-1.5">
+                    <AtSign className="h-3.5 w-3.5" /> اسم المستخدم (Username)
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      value={username}
+                      onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      placeholder="username"
+                      dir="ltr"
+                      className="pl-8"
+                      maxLength={20}
+                    />
+                    <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                      {usernameStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                      {usernameStatus === 'available' && <Check className="h-4 w-4 text-emerald-500" />}
+                      {usernameStatus === 'taken' && <AlertCircle className="h-4 w-4 text-destructive" />}
+                      {usernameStatus === 'invalid' && <AlertCircle className="h-4 w-4 text-amber-500" />}
+                    </div>
+                  </div>
+                  {usernameStatus === 'taken' && <p className="text-xs text-destructive">اسم المستخدم محجوز</p>}
+                  {usernameStatus === 'invalid' && <p className="text-xs text-amber-500">3-20 حرف (أحرف إنجليزية، أرقام، _ فقط)</p>}
+                  {usernameStatus === 'available' && <p className="text-xs text-emerald-500">متاح ✓</p>}
+                </div>
+                <div className="space-y-1">
                   <Label>النبذة</Label>
                   <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="اكتب نبذة عنك..." rows={3} />
                 </div>
-                <Button onClick={handleSaveProfile} disabled={loading} className="gap-2">
+                <Button onClick={handleSaveProfile} disabled={loading || usernameStatus === 'taken' || usernameStatus === 'checking'} className="gap-2">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} حفظ
                 </Button>
               </div>
