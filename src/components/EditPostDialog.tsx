@@ -48,7 +48,7 @@ export default function EditPostDialog({ post, boardId, open, onOpenChange }: Ed
         const uploadedUrl = await uploadPostFile(newFile, user.id);
         file_url = uploadedUrl;
         file_name = newFile.name;
-        post_type = newFileType === 'image' ? 'image' : 'file';
+        post_type = newFileType === 'image' ? 'image' as const : 'file' as const;
       } else if (removeFile) {
         file_url = null;
         file_name = null;
