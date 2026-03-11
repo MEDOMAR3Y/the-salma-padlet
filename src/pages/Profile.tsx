@@ -84,8 +84,15 @@ export default function Profile() {
 
     setLoading(true);
     try {
+      const finalDisplayName = displayName.trim() || username.trim() || null;
+      // Validate display name matches username (case-insensitive)
+      if (finalDisplayName && username && finalDisplayName.toLowerCase() !== username.toLowerCase()) {
+        toast.error('الاسم المعروض لازم يكون نفس اسم المستخدم (تغيير الأحرف الكبيرة/الصغيرة فقط)');
+        setLoading(false);
+        return;
+      }
       const profileData: any = {
-        display_name: displayName.trim() || null,
+        display_name: finalDisplayName,
         bio: bio.trim() || null,
         avatar_url: avatarUrl || null,
         username: username.trim() || null,
