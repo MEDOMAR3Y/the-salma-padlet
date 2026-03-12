@@ -103,34 +103,39 @@ export default function BoardCard({ board }: { board: Board }) {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" onClick={e => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => navigate(`/board/${board.id}`)}>
-                  <Eye className="h-4 w-4 ml-2" /> فتح اللوحة
+              <DropdownMenuContent align="end" className="w-56 rounded-xl" onClick={e => e.stopPropagation()}>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">خيارات اللوحة</DropdownMenuLabel>
+                <DropdownMenuItem className="gap-2" onClick={() => navigate(`/board/${board.id}`)}>
+                  <Eye className="h-4 w-4" /> فتح اللوحة
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setSettingsOpen(true); }}>
-                  <Settings className="h-4 w-4 ml-2" /> إعدادات اللوحة
+                <DropdownMenuItem className="gap-2" onClick={() => { setSettingsOpen(true); }}>
+                  <Settings className="h-4 w-4" /> إعدادات اللوحة
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleCopyLink}>
-                  <Copy className="h-4 w-4 ml-2" /> نسخ الرابط
+                <DropdownMenuItem className="gap-2" onClick={handleCopyLink}>
+                  <Copy className="h-4 w-4" /> نسخ الرابط
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={handleToggleVisibility}>
+                <DropdownMenuItem className="gap-2" onClick={handleToggleVisibility}>
                   {board.visibility === 'public' ? (
-                    <><Lock className="h-4 w-4 ml-2" /> جعلها خاصة</>
+                    <><Lock className="h-4 w-4" /> جعلها خاصة</>
                   ) : (
-                    <><Globe className="h-4 w-4 ml-2" /> جعلها عامة</>
+                    <><Globe className="h-4 w-4" /> جعلها عامة</>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleArchive}>
-                  <Archive className="h-4 w-4 ml-2" /> أرشفة
+                <DropdownMenuItem className="gap-2" onClick={handleArchive}>
+                  {board.is_archived ? (
+                    <><RotateCcw className="h-4 w-4" /> إلغاء الأرشفة</>
+                  ) : (
+                    <><Archive className="h-4 w-4" /> أرشفة</>
+                  )}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive">
-                  <Trash2 className="h-4 w-4 ml-2" /> حذف اللوحة
+                <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive gap-2">
+                  <Trash2 className="h-4 w-4" /> حذف اللوحة
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
