@@ -39,8 +39,9 @@ export default function BoardCard({ board }: { board: Board }) {
 
   const handleArchive = async () => {
     try {
-      await updateBoard.mutateAsync({ id: board.id, is_archived: true });
-      toast.success('تم أرشفة اللوحة');
+      const nextArchivedState = !board.is_archived;
+      await updateBoard.mutateAsync({ id: board.id, is_archived: nextArchivedState });
+      toast.success(nextArchivedState ? 'تم أرشفة اللوحة' : 'تم إلغاء أرشفة اللوحة');
     } catch { toast.error('حصل خطأ'); }
   };
 
