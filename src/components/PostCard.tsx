@@ -3,7 +3,7 @@ import { Post, usePosts, useLikes, useComments } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Heart, MessageCircle, MoreVertical, Trash2, FileText, Send, X, User, Pencil, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -157,7 +157,7 @@ export default function PostCard({ post, boardId }: PostCardProps) {
 
           {post.content && (
             <div
-              className="text-foreground text-sm mb-2 prose prose-sm max-w-none [&>ul]:list-disc [&>ul]:pr-4 [&>ol]:list-decimal [&>ol]:pr-4"
+              className="text-foreground text-sm mb-2 prose prose-sm max-w-none [&>ul]:list-disc [&>ul]:pr-4 [&>ol]:list-decimal [&>ol]:pr-4 break-words [overflow-wrap:anywhere]"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
           )}
@@ -167,8 +167,8 @@ export default function PostCard({ post, boardId }: PostCardProps) {
           )}
 
           {post.post_type === 'file' && post.file_url && (
-            <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2">
-              <FileText className="h-4 w-4 shrink-0" /> {post.file_name || 'ملف مرفق'}
+            <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2 break-words [overflow-wrap:anywhere]">
+              <FileText className="h-4 w-4 shrink-0" /> <span className="min-w-0">{post.file_name || 'ملف مرفق'}</span>
             </a>
           )}
 
@@ -184,35 +184,35 @@ export default function PostCard({ post, boardId }: PostCardProps) {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {/* Copy actions - available to everyone */}
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">خيارات المنشور</DropdownMenuLabel>
+
                 {post.content && (
-                  <DropdownMenuItem onClick={handleCopyContent}>
-                    <Copy className="h-4 w-4 ml-2" /> نسخ المحتوى
+                  <DropdownMenuItem className="gap-2" onClick={handleCopyContent}>
+                    <Copy className="h-4 w-4" /> نسخ المحتوى
                   </DropdownMenuItem>
                 )}
                 {post.link_url && (
-                  <DropdownMenuItem onClick={handleCopyLink}>
-                    <ExternalLink className="h-4 w-4 ml-2" /> نسخ الرابط
+                  <DropdownMenuItem className="gap-2" onClick={handleCopyLink}>
+                    <ExternalLink className="h-4 w-4" /> نسخ الرابط
                   </DropdownMenuItem>
                 )}
                 {post.file_url && (
-                  <DropdownMenuItem onClick={() => window.open(post.file_url!, '_blank')}>
-                    <ExternalLink className="h-4 w-4 ml-2" /> فتح الملف
+                  <DropdownMenuItem className="gap-2" onClick={() => window.open(post.file_url!, '_blank')}>
+                    <ExternalLink className="h-4 w-4" /> فتح الملف
                   </DropdownMenuItem>
                 )}
 
-                {/* Owner actions */}
                 {isOwner && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                      <Pencil className="h-4 w-4 ml-2" /> تعديل المنشور
+                    <DropdownMenuItem className="gap-2" onClick={() => setEditOpen(true)}>
+                      <Pencil className="h-4 w-4" /> تعديل المنشور
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive">
-                      <Trash2 className="h-4 w-4 ml-2" /> حذف المنشور
+                    <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive gap-2">
+                      <Trash2 className="h-4 w-4" /> حذف المنشور
                     </DropdownMenuItem>
                   </>
                 )}

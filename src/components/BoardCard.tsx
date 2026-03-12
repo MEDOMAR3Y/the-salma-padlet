@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Board } from '@/hooks/useBoards';
-import { Layout, Grid3X3, Columns3, Network, MoreVertical, Trash2, Archive, Settings, Copy, Globe, Lock, Eye, Pencil } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Layout, Grid3X3, Columns3, Network, MoreVertical, Trash2, Archive, Settings, Copy, Globe, Lock, Eye, RotateCcw } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useBoards } from '@/hooks/useBoards';
 import { toast } from 'sonner';
@@ -39,8 +39,9 @@ export default function BoardCard({ board }: { board: Board }) {
 
   const handleArchive = async () => {
     try {
-      await updateBoard.mutateAsync({ id: board.id, is_archived: true });
-      toast.success('تم أرشفة اللوحة');
+      const nextArchivedState = !board.is_archived;
+      await updateBoard.mutateAsync({ id: board.id, is_archived: nextArchivedState });
+      toast.success(nextArchivedState ? 'تم أرشفة اللوحة' : 'تم إلغاء أرشفة اللوحة');
     } catch { toast.error('حصل خطأ'); }
   };
 
@@ -93,8 +94,8 @@ export default function BoardCard({ board }: { board: Board }) {
         <div className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold font-['Space_Grotesk'] text-lg truncate">{board.title}</h3>
-              {board.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{board.description}</p>}
+              <h3 className="font-semibold font-['Space_Grotesk'] text-lg line-clamp-2 leading-snug break-words [overflow-wrap:anywhere]">{board.title}</h3>
+              {board.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2 break-words [overflow-wrap:anywhere]">{board.description}</p>}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -102,34 +103,39 @@ export default function BoardCard({ board }: { board: Board }) {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" onClick={e => e.stopPropagation()}>
-                <DropdownMenuItem onClick={() => navigate(`/board/${board.id}`)}>
-                  <Eye className="h-4 w-4 ml-2" /> فتح اللوحة
+              <DropdownMenuContent align="end" className="w-56 rounded-xl" onClick={e => e.stopPropagation()}>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">خيارات اللوحة</DropdownMenuLabel>
+                <DropdownMenuItem className="gap-2" onClick={() => navigate(`/board/${board.id}`)}>
+                  <Eye className="h-4 w-4" /> فتح اللوحة
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setSettingsOpen(true); }}>
-                  <Settings className="h-4 w-4 ml-2" /> إعدادات اللوحة
+                <DropdownMenuItem className="gap-2" onClick={() => { setSettingsOpen(true); }}>
+                  <Settings className="h-4 w-4" /> إعدادات اللوحة
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleCopyLink}>
-                  <Copy className="h-4 w-4 ml-2" /> نسخ الرابط
+                <DropdownMenuItem className="gap-2" onClick={handleCopyLink}>
+                  <Copy className="h-4 w-4" /> نسخ الرابط
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={handleToggleVisibility}>
+                <DropdownMenuItem className="gap-2" onClick={handleToggleVisibility}>
                   {board.visibility === 'public' ? (
-                    <><Lock className="h-4 w-4 ml-2" /> جعلها خاصة</>
+                    <><Lock className="h-4 w-4" /> جعلها خاصة</>
                   ) : (
-                    <><Globe className="h-4 w-4 ml-2" /> جعلها عامة</>
+                    <><Globe className="h-4 w-4" /> جعلها عامة</>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleArchive}>
-                  <Archive className="h-4 w-4 ml-2" /> أرشفة
+                <DropdownMenuItem className="gap-2" onClick={handleArchive}>
+                  {board.is_archived ? (
+                    <><RotateCcw className="h-4 w-4" /> إلغاء الأرشفة</>
+                  ) : (
+                    <><Archive className="h-4 w-4" /> أرشفة</>
+                  )}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive">
-                  <Trash2 className="h-4 w-4 ml-2" /> حذف اللوحة
+                <DropdownMenuItem onClick={() => setDeleteConfirmOpen(true)} className="text-destructive focus:text-destructive gap-2">
+                  <Trash2 className="h-4 w-4" /> حذف اللوحة
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
