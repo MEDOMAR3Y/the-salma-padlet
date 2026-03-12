@@ -167,8 +167,8 @@ export default function PostCard({ post, boardId }: PostCardProps) {
           )}
 
           {post.post_type === 'file' && post.file_url && (
-            <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2">
-              <FileText className="h-4 w-4 shrink-0" /> {post.file_name || 'ملف مرفق'}
+            <a href={post.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary text-sm hover:underline mb-2 break-words [overflow-wrap:anywhere]">
+              <FileText className="h-4 w-4 shrink-0" /> <span className="min-w-0">{post.file_name || 'ملف مرفق'}</span>
             </a>
           )}
 
