@@ -17,19 +17,28 @@ export interface Board {
   updated_at: string;
 }
 
-export function useBoards() {
+interface UseBoardsOptions {
+  includeArchived?: boolean;
+}
+
+export function useBoards({ includeArchived = false }: UseBoardsOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const boardsQuery = useQuery({
-    queryKey: ['boards', user?.id],
+    queryKey: ['boards', user?.id, includeArchived ? 'all' : 'active'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('boards')
         .select('*')
         .eq('user_id', user!.id)
-        .eq('is_archived', false)
         .order('updated_at', { ascending: false });
+
+      if (!includeArchived) {
+        query = query.eq('is_archived', false);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Board[];
     },
@@ -65,5 +74,17 @@ export function useBoards() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['boards'] }),
   });
 
-  return { boards: boardsQuery.data ?? [], isLoading: boardsQuery.isLoading, createBoard, updateBoard, deleteBoard };
+  const allBoards = boardsQuery.data ?? [];
+  const activeBoards = allBoards.filter(board => !board.is_archived);
+  const archivedBoards = allBoards.filter(board => board.is_archived);
+
+  return {
+    boards: includeArchived ? allBoards : activeBoards,
+    activeBoards,
+    archivedBoards,
+    isLoading: boardsQuery.isLoading,
+    createBoard,
+    updateBoard,
+    deleteBoard,
+  };
 }
