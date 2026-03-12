@@ -94,8 +94,8 @@ export default function BoardCard({ board }: { board: Board }) {
         <div className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold font-['Space_Grotesk'] text-lg truncate">{board.title}</h3>
-              {board.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{board.description}</p>}
+              <h3 className="font-semibold font-['Space_Grotesk'] text-lg line-clamp-2 leading-snug break-words [overflow-wrap:anywhere]">{board.title}</h3>
+              {board.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2 break-words [overflow-wrap:anywhere]">{board.description}</p>}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
