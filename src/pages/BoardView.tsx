@@ -112,7 +112,7 @@ export default function BoardView() {
       className="min-h-screen overflow-x-hidden"
       dir="rtl"
       style={{
-        backgroundColor: board.background_color || undefined,
+        backgroundColor: board.background_image ? (board.background_color || undefined) : undefined,
         backgroundImage: board.background_image ? `url(${board.background_image})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
